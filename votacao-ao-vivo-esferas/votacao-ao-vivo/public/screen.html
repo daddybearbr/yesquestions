@@ -203,9 +203,12 @@
   /* ------------------------------------------------------------- QR */
   fetch('/api/config').then(function (r) { return r.json(); }).then(function (cfg) {
     var url = Live.joinUrl(cfg.publicUrl);
-    var svg = Live.qrSvg(url);
-    $('lobbyQr').innerHTML = svg;
-    $('cornerQr').innerHTML = svg;
+    // QR oficial (public/img/qr-participantes.svg) quando o endereço é o do evento; senão gera na hora.
+    var html = url === 'https://yesquestions.onrender.com/'
+      ? '<img src="/img/qr-participantes.svg" alt="QR Code" style="display:block;width:100%;height:100%">'
+      : Live.qrSvg(url);
+    $('lobbyQr').innerHTML = html;
+    $('cornerQr').innerHTML = html;
     $('lobbyUrl').textContent = Live.prettyUrl(url);
     $('cornerUrl').textContent = Live.prettyUrl(url);
   });
