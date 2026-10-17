@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Telão — As Sete Esferas</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  /* escala proporcional ao telão 16:9 (1rem ≈ 27px em 1920×1080) */
+  html { font-size: min(1.4063vw, 2.5vh); }
+  body { height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  body.hide-cursor, body.hide-cursor * { cursor: none !important; }
+
+  /* ------------------------------------------------------ cabeçalho */
+  .top { position: relative; z-index: 2; display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; padding: 1rem 2.2rem 0; }
+  .top .brand-mono { font-size: .95rem; }
+  .top .right { text-align: right; }
+  .top .logo { height: 2.3rem; display: block; margin: 0 auto; }
+  body[data-phase="lobby"] .top { display: none; }
+
+  .conn { position: fixed; right: 1rem; top: .8rem; z-index: 45; display: none; align-items: center; gap: .4rem; font-size: .8rem; color: var(--orange); letter-spacing: .1em; text-transform: uppercase; }
+  .offline .conn { display: inline-flex; }
+  .conn i { width: .5rem; height: .5rem; border-radius: 50%; background: var(--orange); }
+
+  section { flex: 1; min-height: 0; position: relative; }
+
+  /* ---------------------------------------------------------- lobby */
+  #lobby { display: flex; flex-direction: column; }
+  #lobby .banner { display: block; width: 100%; height: auto; max-height: 40vh; object-fit: cover; object-position: center top; }
+  #lobby .grid { flex: 1; display: grid; grid-template-columns: 1.15fr .85fr; align-items: center; gap: 3rem; padding: 1rem 3rem 4.4rem; }
+  #lobby .how { font-size: 1.5rem; line-height: 1.35; text-transform: uppercase; letter-spacing: .06em; margin: 0 0 1.2rem; max-width: 26ch; }
+  #lobby .url { display: inline-block; font-size: 1.9rem; font-weight: 700; letter-spacing: .02em; color: var(--bg); background: var(--yellow); padding: .5rem 1.2rem; border-radius: 999px; word-break: break-all; text-transform: lowercase; }
+  .counter { margin-top: 1.6rem; display: flex; align-items: baseline; gap: .9rem; color: var(--muted); font-size: 1.15rem; text-transform: uppercase; letter-spacing: .12em; }
+  .counter b { font-family: var(--display); font-weight: 400; font-size: 4.6rem; line-height: 1; color: var(--cream); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+  .qrbox { justify-self: center; background: #fff; border-radius: 1.4rem; padding: .9rem; width: min(100%, 15rem); aspect-ratio: 1; }
+  .qrbox svg { display: block; width: 100%; height: 100%; }
+
+  /* ---------------------------------------------------------- stage */
+  #stage { display: block; }
+  #stage .main { position: absolute; left: 0; top: 0; bottom: 0; right: 10.5vw; display: flex; flex-direction: column; padding: .9rem 1rem 1.1rem 2.4rem; min-height: 0; }
+  .qhead { padding-right: 6.6rem; min-height: 0; }
+  .qnum { font-family: var(--display); color: var(--orange); font-size: 1.35rem; letter-spacing: .12em; text-transform: uppercase; margin-bottom: .25rem; }
+  .qtext { font-size: .98rem; line-height: 1.3; max-width: 62rem; text-transform: none; color: var(--cream); }
+
+  .clock { position: absolute; right: 1rem; top: .5rem; width: 4.8rem; height: 4.8rem; }
+  .clock svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+  .clock circle { fill: none; stroke-width: 9; }
+  .clock .bg { stroke: var(--card-2); }
+  .clock .fg { stroke: var(--yellow); stroke-linecap: round; transition: stroke .2s; }
+  .clock.low .fg { stroke: var(--red); }
+  .clock.idle .fg { stroke: var(--card-2); }
+  .clock .num { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--display); font-size: 2.3rem; font-variant-numeric: tabular-nums; }
+  .clock .num small { font-family: var(--mono); font-size: .8rem; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; }
+
+  .opts { --sph: 4.4rem; flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: .65rem; padding: .5rem 0 .3rem; }
+  .row { flex: 0 0 auto; display: grid; grid-template-columns: var(--sph) 1fr 7.6rem; align-items: center; gap: 1.3rem; transition: opacity .4s; }
+  .row .sphere { width: var(--sph); height: var(--sph); font-size: 2.8rem; line-height: 1; }
+  .row .otext { font-size: 1.12rem; line-height: 1.1; letter-spacing: .03em; text-transform: uppercase; }
+  .row .meter { height: .45rem; margin-top: .4rem; border-radius: 99px; background: rgba(228,241,203,.12); overflow: hidden; }
+  .row .fill { height: 100%; width: 0; border-radius: 99px; background-image: url("/img/grain.png"), var(--og); background-size: 160px, cover; transition: width .45s cubic-bezier(.2,.8,.2,1); }
+  .row .val { text-align: right; line-height: 1; font-variant-numeric: tabular-nums; }
+  .row .val b { display: block; font-family: var(--display); font-weight: 400; font-size: 2.3rem; }
+  .row .val span { font-size: .9rem; color: var(--muted); letter-spacing: .08em; }
+  .row .tags { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: .3rem; }
+  .row .tags:empty { display: none; }
+  .tag { font-size: .75rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; padding: .15rem .6rem; border-radius: 99px; }
+  .tag.ok { background: var(--yellow); color: var(--bg); }
+  .tag.best { border: 2px solid var(--cream); color: var(--cream); }
+  .row.correct .sphere { box-shadow: 0 0 0 .3rem var(--bg), 0 0 0 .5rem var(--yellow), 0 0 2.4rem .3rem rgba(239,230,97,.45); }
+  .row.dim { opacity: .42; }
+
+  .foot { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 1.6rem; min-height: 3.8rem; }
+  .votes { color: var(--muted); font-size: .85rem; letter-spacing: .1em; text-transform: uppercase; line-height: 1.3; white-space: nowrap; }
+  .votes b { font-family: var(--display); font-weight: 400; color: var(--cream); font-size: 2.2rem; letter-spacing: 0; vertical-align: -.1em; margin-right: .3rem; }
+  #bannerSlot { flex: 1; text-align: center; }
+  .banner-res { display: inline-flex; align-items: center; gap: 1rem; padding: .35rem 1.2rem; white-space: nowrap; border-radius: 99px; background: var(--yellow); color: var(--bg); animation: pop .5s cubic-bezier(.2,1.4,.4,1); }
+  .banner-res b { font-family: var(--display); font-weight: 400; font-size: 1.6rem; letter-spacing: .04em; text-transform: uppercase; }
+  .banner-res span { font-size: .8rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+  .banner-res.plain { background: var(--card-2); color: var(--cream); }
+  @keyframes pop { from { transform: scale(.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  body[data-phase="closed"] #corner { display: none; }
+  #corner { display: flex; align-items: center; gap: .7rem; background: var(--bg-2); border-radius: .9rem; padding: .35rem .9rem .35rem .35rem; color: var(--muted); font-size: .68rem; letter-spacing: .1em; text-transform: uppercase; }
+  #corner .qr { width: 3.4rem; height: 3.4rem; flex: none; background: #fff; border-radius: .5rem; padding: .25rem; }
+  #corner .qr svg { width: 100%; height: 100%; display: block; }
+  #corner > div:last-child { white-space: nowrap; }
+  #corner b { display: block; color: var(--cream); font-size: .85rem; letter-spacing: .02em; text-transform: lowercase; }
+
+  /* título vertical (cortado na borda, como nos slides) */
+  .vtitle { position: absolute; right: 0; top: 0; bottom: 0; width: 10.5vw; overflow: hidden; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+  .vtitle span {
+    writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap;
+    font-family: var(--display); text-transform: uppercase; font-size: 9.6vw; line-height: .86; letter-spacing: -.005em;
+    background-image: url("/img/grain.png"), linear-gradient(to bottom, var(--teal) 0%, var(--teal) 38%, var(--orange) 78%, var(--orange-2) 100%);
+    background-size: 160px, 100% 100%;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
+  /* ------------------------------------------------------- resumo final */
+  #finished { padding: 1.2rem 2.4rem 2rem; }
+  #finished h1 { font-family: var(--display); font-weight: 400; font-size: 4.6rem; line-height: 1; margin: 0 0 1.2rem; text-transform: uppercase; }
+  .summary { display: grid; grid-template-columns: repeat(auto-fill, minmax(21rem, 1fr)); gap: 1rem; }
+  .sum-card { background: var(--bg-2); border-radius: 1.1rem; padding: 1rem 1.2rem; border-top: .3rem solid var(--teal); }
+  .sum-card:nth-child(4n+2) { border-color: var(--red); }
+  .sum-card:nth-child(4n+3) { border-color: var(--yellow); }
+  .sum-card:nth-child(4n+4) { border-color: var(--orange); }
+  .sum-card small { color: var(--muted); font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; }
+  .sum-card .q { font-family: var(--display); font-size: 1.7rem; line-height: 1.05; margin: .3rem 0 .7rem; text-transform: uppercase; }
+  .sum-card .l { font-size: .9rem; line-height: 1.5; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+  .sum-card .l b { color: var(--cream); }
+  .sum-card .l .ok { color: var(--yellow); }
+
+  /* ----------------------------------------------------------- controle */
+  #ctl { position: fixed; left: 50%; bottom: 1.4rem; transform: translateX(-50%); display: flex; gap: .7rem; align-items: center; background: rgba(25,25,27,.94); border: 1px solid var(--card-2); padding: .6rem .7rem; border-radius: 1.2rem; transition: opacity .35s; z-index: 60; }
+  #ctl.faded { opacity: 0; pointer-events: none; }
+  #ctl button { font-size: .95rem; font-weight: 800; padding: .7rem 1.2rem; border-radius: .9rem; border: 0; cursor: pointer; background: var(--card-2); color: var(--cream); letter-spacing: .03em; }
+  #ctl button.primary { background: var(--teal); }
+  #ctl button.go { background: var(--yellow); color: var(--bg); }
+  #ctl button.stop { background: var(--red); color: var(--bg); }
+  #ctl button.danger { background: transparent; color: var(--red); }
+  #ctl .err { color: var(--red); font-weight: 700; font-size: .85rem; max-width: 18rem; }
+  #keyWarn { position: fixed; left: 50%; top: 4rem; transform: translateX(-50%); background: var(--red); color: var(--bg); font-weight: 800; padding: .6rem 1.2rem; border-radius: 12px; z-index: 70; }
+</style>
+</head>
+<body data-phase="lobby">
+<div class="stripe" style="height:1.9vh"></div>
+<div class="conn"><i></i><span>reconectando…</span></div>
+
+<header class="top">
+  <div class="brand-mono left">As sete<br><em>Esferas</em></div>
+  <img class="logo" src="/img/logo.png" alt="YES MDV">
+  <div class="brand-mono right">Uma geração <em>que</em><br><em>influencia</em></div>
+</header>
+
+<section id="lobby">
+  <img class="banner" src="/img/banner.jpg" alt="As Sete Esferas">
+  <div class="grid">
+    <div>
+      <p class="how">Aponte a câmera do celular para o QR Code ou acesse:</p>
+      <span class="url" id="lobbyUrl"></span>
+      <div class="counter"><b id="lobbyCount">0</b><span>pessoas conectadas</span></div>
+    </div>
+    <div class="qrbox" id="lobbyQr"></div>
+  </div>
+</section>
+
+<section id="stage" class="hidden">
+  <div class="main">
+    <div class="qhead">
+      <div class="qnum" id="qnum"></div>
+      <div class="qtext" id="qtext"></div>
+    </div>
+    <div class="clock idle" id="clock">
+      <svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52"/><circle class="fg" id="ring" cx="60" cy="60" r="52"/></svg>
+      <div class="num" id="clockNum"></div>
+    </div>
+    <div class="opts" id="bars"></div>
+    <div class="foot">
+      <div class="votes"><b id="totalVotes">0</b><span id="votesOf"></span></div>
+      <div id="bannerSlot"></div>
+      <aside id="corner">
+        <div class="qr" id="cornerQr"></div>
+        <div>Entre para votar<b id="cornerUrl"></b></div>
+      </aside>
+    </div>
+  </div>
+  <div class="vtitle"><span id="vtitle"></span></div>
+</section>
+
+<section id="finished" class="hidden">
+  <h1>Resultados finais</h1>
+  <div class="summary" id="summary"></div>
+</section>
+
+<div id="ctl" class="hidden"></div>
+
+<script src="/vendor/qrcode.js"></script>
+<script src="/common.js"></script>
+<script>
+(function () {
+  'use strict';
+  var params = new URLSearchParams(location.search);
+  var key = params.get('key') || '';
+  var body = document.body;
+  var $ = function (id) { return document.getElementById(id); };
+  var lobby = $('lobby'), stage = $('stage'), finished = $('finished');
+  var cur = null, rowEls = [], rowIndex = -2, lastTotal = 0;
+  var RING = 2 * Math.PI * 52;
+  var ring = $('ring');
+  ring.style.strokeDasharray = RING;
+  var raf = 0;
+  Live.keepAlive();
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function letter(i) { return String.fromCharCode(65 + i); }
+  function sum(a) { return a.reduce(function (x, y) { return x + y; }, 0); }
+
+  /* ------------------------------------------------------------- QR */
+  fetch('/api/config').then(function (r) { return r.json(); }).then(function (cfg) {
+    var url = Live.joinUrl(cfg.publicUrl);
+    var svg = Live.qrSvg(url);
+    $('lobbyQr').innerHTML = svg;
+    $('cornerQr').innerHTML = svg;
+    $('lobbyUrl').textContent = Live.prettyUrl(url);
+    $('cornerUrl').textContent = Live.prettyUrl(url);
+  });
+
+  /* ------------------------------------------------------- renderização */
+  function show(which) {
+    lobby.classList.toggle('hidden', which !== 'lobby');
+    stage.classList.toggle('hidden', which !== 'stage');
+    finished.classList.toggle('hidden', which !== 'finished');
+  }
+
+  function buildRows(q) {
+    var bars = $('bars');
+    bars.innerHTML = '';
+    rowEls = q.options.map(function (text, i) {
+      var row = el('div', 'row opt-color-' + (i % 8));
+      row.appendChild(el('div', 'sphere', letter(i)));
+      var mid = el('div', 'mid');
+      var tags = el('div', 'tags');
+      mid.appendChild(tags);
+      mid.appendChild(el('div', 'otext', text));
+      var meter = el('div', 'meter');
+      var fill = el('div', 'fill');
+      meter.appendChild(fill);
+      mid.appendChild(meter);
+      row.appendChild(mid);
+      var val = el('div', 'val');
+      var b = el('b', null, '0');
+      var pct = el('span', null, '0%');
+      val.appendChild(b); val.appendChild(pct);
+      row.appendChild(val);
+      bars.appendChild(row);
+      return { row: row, tags: tags, fill: fill, b: b, pct: pct };
+    });
+  }
+
+  function applyCounts(counts, connected) {
+    var total = sum(counts);
+    lastTotal = total;
+    rowEls.forEach(function (r, i) {
+      var c = counts[i] || 0;
+      var p = total ? (c / total) * 100 : 0;
+      r.fill.style.width = p + '%';
+      r.b.textContent = c;
+      r.pct.textContent = Math.round(p) + '%';
+    });
+    $('totalVotes').textContent = total;
+    if (typeof connected === 'number') {
+      $('lobbyCount').textContent = connected;
+      setVotesOf(connected);
+    }
+  }
+
+  var lastConnected = 0;
+  function setVotesOf(connected) {
+    lastConnected = connected;
+    if (!cur) return;
+    $('votesOf').textContent = cur.phase === 'voting' || cur.phase === 'closed'
+      ? (lastTotal === 1 ? 'voto' : 'votos') + ' · ' + connected + ' conectados'
+      : '';
+  }
+
+  function banner(s) {
+    var slot = $('bannerSlot');
+    slot.innerHTML = '';
+    if (s.phase !== 'closed' || !s.result) return;
+    var r = s.result, opts = s.question.options, b;
+    if (r.correct !== null && r.correct !== undefined) {
+      b = el('div', 'banner-res');
+      b.appendChild(el('b', null, '✓ Resposta correta: ' + letter(r.correct)));
+      var hit = r.total ? Math.round((r.counts[r.correct] / r.total) * 100) : 0;
+      b.appendChild(el('span', null, r.total ? hit + '% acertaram' : 'sem votos'));
+    } else if (!r.winners.length) {
+      b = el('div', 'banner-res plain'); b.appendChild(el('b', null, 'Nenhum voto registrado'));
+    } else {
+      b = el('div', 'banner-res');
+      b.appendChild(el('b', null, (r.winners.length > 1 ? 'Empate: ' : '★ ') + r.winners.map(function (i) { return letter(i); }).join(' • ')));
+    }
+    slot.appendChild(b);
+  }
+
+  function markResult(s) {
+    var closed = s.phase === 'closed' && s.result;
+    var r = closed ? s.result : null;
+    var hasCorrect = r && r.correct !== null && r.correct !== undefined;
+    rowEls.forEach(function (x, i) {
+      var isCorrect = hasCorrect && r.correct === i;
+      var isTop = r && r.winners.indexOf(i) >= 0;
+      x.row.classList.toggle('correct', !!isCorrect);
+      x.row.classList.toggle('dim', !!r && (hasCorrect ? !isCorrect : (r.winners.length > 0 && !isTop)));
+      x.tags.innerHTML = '';
+      if (isCorrect) x.tags.appendChild(el('span', 'tag ok', '✓ Resposta correta'));
+      if (isTop) x.tags.appendChild(el('span', 'tag best', '★ Mais votada'));
+    });
+  }
+
+  function renderSummary(s) {
+    var box = $('summary');
+    box.innerHTML = '';
+    s.summary.forEach(function (it, i) {
+      var c = el('div', 'sum-card');
+      c.appendChild(el('small', null, 'Pergunta ' + (i + 1)));
+      c.appendChild(el('div', 'q', it.title || it.text));
+      if (it.correct !== null && it.correct !== undefined) {
+        var l1 = el('div', 'l');
+        l1.appendChild(document.createTextNode('Resposta correta: '));
+        l1.appendChild(el('b', 'ok', letter(it.correct)));
+        c.appendChild(l1);
+      }
+      var l2 = el('div', 'l');
+      if (!it.total) { c.appendChild(el('div', 'l', 'Sem votos')); box.appendChild(c); return; }
+      if (!it.winners.length) l2.textContent = 'Sem votos';
+      else {
+        l2.appendChild(document.createTextNode((it.winners.length > 1 ? 'Empate: ' : 'Mais votada: ')));
+        l2.appendChild(el('b', null, it.winners.map(function (k) { return letter(k); }).join(' • ')));
+        l2.appendChild(document.createTextNode(' · ' + Math.round((it.counts[it.winners[0]] / it.total) * 100) + '%'));
+      }
+      c.appendChild(l2);
+      if (it.correct !== null && it.correct !== undefined && it.total) {
+        var l3 = el('div', 'l');
+        l3.appendChild(el('b', null, Math.round((it.counts[it.correct] / it.total) * 100) + '%'));
+        l3.appendChild(document.createTextNode(' acertaram · ' + it.total + ' votos'));
+        c.appendChild(l3);
+      } else {
+        c.appendChild(el('div', 'l', it.total + (it.total === 1 ? ' voto' : ' votos')));
+      }
+      box.appendChild(c);
+    });
+  }
+
+  function render(s) {
+    cur = s;
+    body.dataset.phase = s.phase;
+    document.title = s.title + ' — Telão';
+
+    if (s.phase === 'lobby') { show('lobby'); renderControls(); return; }
+    if (s.phase === 'finished') { show('finished'); renderSummary(s); renderControls(); return; }
+
+    show('stage');
+    var zeros = s.question.options.map(function () { return 0; });
+    if (rowIndex !== s.index || rowEls.length !== s.question.options.length) {
+      rowIndex = s.index;
+      buildRows(s.question);
+      applyCounts(zeros);
+    }
+    $('qnum').textContent = 'Pergunta ' + (s.index + 1) + '/' + s.total;
+    $('qtext').textContent = s.question.text;
+    $('vtitle').textContent = s.question.title || '';
+    if (s.phase === 'closed' && s.result) applyCounts(s.result.counts);
+    if (s.phase === 'ready') applyCounts(zeros);
+    setVotesOf(lastConnected);
+    markResult(s);
+    banner(s);
+    cancelAnimationFrame(raf);
+    tick();
+    renderControls();
+  }
+
+  function tick() {
+    if (!cur) return;
+    var clock = $('clock'), num = $('clockNum');
+    if (cur.phase === 'voting') {
+      var left = cur.endsAt - Live.serverNow();
+      var frac = Math.max(0, Math.min(1, left / (cur.voteSeconds * 1000)));
+      ring.style.strokeDashoffset = RING * (1 - frac);
+      clock.classList.remove('idle');
+      clock.classList.toggle('low', left < 8000);
+      num.textContent = Live.fmtSeconds(left);
+      if (left > 0) raf = requestAnimationFrame(tick);
+      return;
+    }
+    clock.classList.remove('low');
+    clock.classList.add('idle');
+    if (cur.phase === 'ready') {
+      ring.style.strokeDashoffset = 0;
+      num.textContent = cur.voteSeconds;
+    } else {
+      ring.style.strokeDashoffset = RING;
+      num.innerHTML = '<small>fim</small>';
+    }
+  }
+
+  Live.connect('screen', {
+    onStatus: function (ok) { body.classList.toggle('offline', !ok); },
+    onState: render,
+    onCounts: function (c) {
+      $('lobbyCount').textContent = c.connected;
+      if (cur && c.index === cur.index && cur.phase !== 'closed') applyCounts(c.counts, c.connected);
+      else setVotesOf(c.connected);
+    },
+  });
+
+  /* ----------------------------------------------------------- controle */
+  var ctl = $('ctl');
+  var busy = false, lastPress = 0, errTimer = null;
+
+  function run(action, confirmMsg) {
+    if (busy) return;
+    if (confirmMsg && !window.confirm(confirmMsg)) return;
+    busy = true;
+    Live.post(action, key).then(function (r) {
+      busy = false;
+      if (!r.ok) showErr(r.error);
+    });
+  }
+
+  function showErr(msg) {
+    var e = ctl.querySelector('.err');
+    if (!e) return;
+    e.textContent = msg || 'Erro';
+    clearTimeout(errTimer);
+    errTimer = setTimeout(function () { e.textContent = ''; }, 4000);
+  }
+
+  function renderControls() {
+    if (!key || !cur) return;
+    ctl.classList.remove('hidden');
+    ctl.innerHTML = '';
+    var secs = Live.secondaryActions(cur, lastTotal);
+    secs.forEach(function (a) {
+      if (a.action !== 'back') return;
+      var bb = el('button', null, a.label);
+      bb.onclick = function () { run(a.action); bb.blur(); };
+      ctl.appendChild(bb);
+    });
+    var p = Live.primaryAction(cur);
+    if (p) {
+      var pb = el('button', p.kind, p.label);
+      pb.onclick = function () { run(p.action); pb.blur(); };
+      ctl.appendChild(pb);
+    }
+    secs.forEach(function (a) {
+      if (a.action === 'back') return;
+      var b = el('button', a.danger ? 'danger' : '', a.label);
+      b.onclick = function () { run(a.action, a.confirm); b.blur(); };
+      ctl.appendChild(b);
+    });
+    ctl.appendChild(el('span', 'err'));
+  }
+
+  if (key) {
+    Live.post('check', key).then(function (r) {
+      if (!r.ok) {
+        var w = el('div', null, 'Chave de admin incorreta — o telão está só em modo de visualização.');
+        w.id = 'keyWarn';
+        document.body.appendChild(w);
+        key = '';
+        ctl.classList.add('hidden');
+      }
+    });
+  }
+
+  // controles somem sozinhos; aparecem ao mexer o mouse/tocar
+  var fadeTimer = null;
+  function wake() {
+    body.classList.remove('hide-cursor');
+    ctl.classList.remove('faded');
+    clearTimeout(fadeTimer);
+    fadeTimer = setTimeout(function () {
+      ctl.classList.add('faded');
+      body.classList.add('hide-cursor');
+    }, 3500);
+  }
+  ['mousemove', 'mousedown', 'touchstart', 'keydown'].forEach(function (ev) { window.addEventListener(ev, wake, { passive: true }); });
+  wake();
+
+  window.addEventListener('keydown', function (e) {
+    if (e.key === 'f' || e.key === 'F') {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+      return;
+    }
+    if (!key || !cur) return;
+    if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowRight' || e.key === 'PageDown') {
+      e.preventDefault();
+      var now = Date.now();
+      if (now - lastPress < 700) return;
+      lastPress = now;
+      var p = Live.primaryAction(cur);
+      if (p) run(p.action);
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      if (cur.phase === 'ready') run('back');
+    }
+  });
+})();
+</script>
+</body>
+</html>

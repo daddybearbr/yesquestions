@@ -1,0 +1,15 @@
+{
+  "name": "votacao-ao-vivo",
+  "version": "1.0.0",
+  "description": "Votação em tempo real com QR Code, cronômetro e telão (estilo Mentimeter). Sem dependências.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/load.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}

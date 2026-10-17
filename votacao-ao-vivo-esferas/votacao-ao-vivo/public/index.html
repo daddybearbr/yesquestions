@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#19191b">
+<title>As Sete Esferas — Votação</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  body { min-height: 100dvh; display: flex; flex-direction: column; padding-bottom: 8px; }
+  .top {
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;
+    padding: calc(14px + env(safe-area-inset-top)) 16px 4px;
+  }
+  .top .brand-mono { font-size: 10px; letter-spacing: .24em; }
+  .top .logo { height: 30px; display: block; }
+  .top .st { justify-self: end; display: inline-flex; align-items: center; gap: 6px; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--yellow); }
+  .offline .dot { background: var(--red); }
+
+  main { flex: 1; display: flex; flex-direction: column; padding: 8px 16px calc(28px + env(safe-area-inset-bottom)); max-width: 640px; width: 100%; margin: 0 auto; }
+
+  .center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; padding: 12px 4px; }
+  .center .hero { width: calc(100% + 32px); max-width: none; margin: 0 -16px; display: block; }
+  .center h1 { font-family: var(--display); font-weight: 400; font-size: 34px; line-height: 1.02; margin: 0; text-transform: uppercase; }
+  .center p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; text-transform: uppercase; letter-spacing: .06em; max-width: 30ch; }
+  .pulse { width: 46px; height: 46px; border-radius: 50%; animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { transform: scale(.82); opacity: .55 } 50% { transform: scale(1.08); opacity: 1 } }
+
+  .qnum { font-family: var(--display); color: var(--orange); font-size: 18px; letter-spacing: .12em; text-transform: uppercase; }
+  .qtitle { font-family: var(--display); font-weight: 400; font-size: 30px; line-height: 1.02; text-transform: uppercase; margin: 2px 0 8px; }
+  .qtext { font-size: 13px; line-height: 1.45; color: var(--cream); opacity: .85; margin: 0 0 14px; }
+
+  .timer { height: 8px; border-radius: 99px; background: rgba(228,241,203,.14); overflow: hidden; }
+  .timer > i { display: block; height: 100%; width: 100%; background: var(--yellow); transform-origin: left; }
+  .timer.low > i { background: var(--red); }
+  .secs { text-align: right; color: var(--muted); font-weight: 700; font-size: 12px; letter-spacing: .1em; margin: 4px 0 10px; font-variant-numeric: tabular-nums; }
+
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt {
+    display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 14px; width: 100%; text-align: left;
+    background: var(--bg-2); color: var(--cream); border: 2px solid rgba(228,241,203,.12); border-radius: 22px;
+    padding: 10px 14px 10px 10px; font-family: var(--mono); font-size: 13.5px; line-height: 1.3; letter-spacing: .02em; text-transform: uppercase; cursor: pointer;
+    -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+    transition: transform .08s ease, border-color .15s ease, opacity .2s ease, background .15s ease;
+  }
+  .opt .sphere { width: 52px; height: 52px; font-size: 30px; line-height: 1; }
+  .opt:active { transform: scale(.985); background: var(--card); }
+  .opt.chosen { border-color: var(--cream); background: var(--card); }
+  .opt.dim { opacity: .4; }
+  .opt[disabled] { cursor: default; }
+
+  .msg { margin-top: 14px; text-align: center; min-height: 20px; font-weight: 700; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; line-height: 1.5; }
+  .msg.ok { color: var(--yellow); }
+  .msg.err { color: var(--red); }
+
+  .result { margin-top: 6px; width: 100%; }
+  .badge { display: inline-block; font-weight: 800; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; padding: 5px 12px; border-radius: 99px; }
+  .badge.ok { background: var(--yellow); color: var(--bg); }
+  .badge.no { background: var(--red); color: var(--bg); }
+  .badge.plain { border: 2px solid var(--cream); color: var(--cream); }
+  .answer { display: grid; grid-template-columns: 52px 1fr; gap: 14px; align-items: center; text-align: left; margin-top: 14px; padding: 10px; border-radius: 22px; background: var(--bg-2); font-size: 13px; line-height: 1.35; text-transform: uppercase; letter-spacing: .02em; }
+  .answer .sphere { width: 52px; height: 52px; font-size: 30px; }
+  .answer small { display: block; color: var(--yellow); font-weight: 800; letter-spacing: .14em; font-size: 10px; margin-bottom: 3px; }
+</style>
+</head>
+<body>
+<div class="stripe"></div>
+<div class="top">
+  <div class="brand-mono">As sete<br><em>Esferas</em></div>
+  <img class="logo" src="/img/logo.png" alt="YES MDV">
+  <span class="st" id="status"><span class="dot"></span><span id="statusText">conectado</span></span>
+</div>
+
+<main id="main">
+  <div class="center" id="boot"><div class="pulse sphere opt-color-0"></div><p>Conectando…</p></div>
+</main>
+
+<script src="/common.js"></script>
+<script>
+(function () {
+  'use strict';
+  var voterId = Live.getVoterId();
+  var main = document.getElementById('main');
+  var statusEl = document.getElementById('status');
+  var statusText = document.getElementById('statusText');
+
+  var cur = null;        // último estado
+  var myVote = null;     // opção escolhida na pergunta atual
+  var pending = false;   // voto em envio
+  var shownKey = '';     // evita redesenhar à toa
+  var timerBar, secsEl, msgEl, optEls = [];
+  var raf = 0;
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function letter(i) { return String.fromCharCode(65 + i); }
+
+  function center(title, text, opts) {
+    opts = opts || {};
+    main.innerHTML = '';
+    var box = el('div', 'center');
+    if (opts.hero) { var img = el('img', 'hero'); img.src = '/img/banner.jpg'; img.alt = 'As Sete Esferas'; box.appendChild(img); }
+    if (opts.pulse) box.appendChild(el('div', 'pulse sphere opt-color-' + (opts.pulse % 8)));
+    if (title) box.appendChild(el('h1', null, title));
+    if (text) box.appendChild(el('p', null, text));
+    main.appendChild(box);
+    return box;
+  }
+
+  function renderVoting(s) {
+    main.innerHTML = '';
+    main.appendChild(el('div', 'qnum', 'Pergunta ' + (s.index + 1) + '/' + s.total));
+    if (s.question.title) main.appendChild(el('div', 'qtitle', s.question.title));
+    main.appendChild(el('p', 'qtext', s.question.text));
+
+    var timer = el('div', 'timer');
+    timer.appendChild(document.createElement('i'));
+    timerBar = timer;
+    main.appendChild(timer);
+    secsEl = el('div', 'secs', '');
+    main.appendChild(secsEl);
+
+    var list = el('div', 'options');
+    optEls = s.question.options.map(function (text, i) {
+      var b = el('button', 'opt opt-color-' + (i % 8));
+      b.type = 'button';
+      b.appendChild(el('span', 'sphere', letter(i)));
+      b.appendChild(el('span', null, text));
+      b.addEventListener('click', function () { vote(i); });
+      list.appendChild(b);
+      return b;
+    });
+    main.appendChild(list);
+    msgEl = el('div', 'msg');
+    main.appendChild(msgEl);
+    paintChoice();
+    tick();
+  }
+
+  function paintChoice() {
+    optEls.forEach(function (b, i) {
+      var chosen = myVote === i;
+      b.classList.toggle('chosen', chosen);
+      b.classList.toggle('dim', myVote !== null && !chosen);
+      b.disabled = myVote !== null || pending;
+    });
+    if (msgEl && myVote !== null) {
+      msgEl.className = 'msg ok';
+      msgEl.textContent = 'Voto registrado em ' + letter(myVote) + '. Acompanhe o resultado no telão.';
+    }
+  }
+
+  function vote(i) {
+    if (!cur || cur.phase !== 'voting' || myVote !== null || pending) return;
+    pending = true;
+    optEls.forEach(function (b) { b.disabled = true; });
+    msgEl.className = 'msg'; msgEl.textContent = 'Enviando…';
+    if (navigator.vibrate) { try { navigator.vibrate(25); } catch (e) {} }
+    fetch('/api/vote', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ voterId: voterId, qIndex: cur.index, option: i }),
+    }).then(function (r) { return r.json(); }).then(function (r) {
+      pending = false;
+      if (r.ok) { myVote = r.option; }
+      else if (typeof r.option === 'number') { myVote = r.option; }
+      else {
+        optEls.forEach(function (b) { b.disabled = false; });
+        msgEl.className = 'msg err'; msgEl.textContent = r.error || 'Não foi possível votar.';
+        return;
+      }
+      paintChoice();
+    }).catch(function () {
+      pending = false;
+      optEls.forEach(function (b) { b.disabled = false; });
+      msgEl.className = 'msg err'; msgEl.textContent = 'Sem conexão. Toque de novo para tentar.';
+    });
+  }
+
+  function tick() {
+    cancelAnimationFrame(raf);
+    if (!cur || cur.phase !== 'voting' || !timerBar) return;
+    var left = cur.endsAt - Live.serverNow();
+    var total = cur.voteSeconds * 1000;
+    var frac = Math.max(0, Math.min(1, left / total));
+    timerBar.firstChild.style.transform = 'scaleX(' + frac + ')';
+    timerBar.classList.toggle('low', left < 8000);
+    secsEl.textContent = Live.fmtSeconds(left) + 's';
+    if (left <= 0) {
+      optEls.forEach(function (b) { b.disabled = true; });
+      if (myVote === null) { msgEl.className = 'msg err'; msgEl.textContent = 'Tempo esgotado.'; }
+      return;
+    }
+    raf = requestAnimationFrame(tick);
+  }
+
+  function renderClosed(s) {
+    var r = s.result || {};
+    var box = center('Votação encerrada', null, {});
+    var res = el('div', 'result');
+    var hasCorrect = r.correct !== null && r.correct !== undefined;
+    if (hasCorrect) {
+      if (myVote === null) res.appendChild(el('span', 'badge plain', 'Você não votou'));
+      else if (myVote === r.correct) res.appendChild(el('span', 'badge ok', '✓ Você acertou!'));
+      else res.appendChild(el('span', 'badge no', 'Você votou em ' + letter(myVote)));
+      var ans = el('div', 'answer opt-color-' + (r.correct % 8));
+      ans.appendChild(el('span', 'sphere', letter(r.correct)));
+      var t = el('div');
+      t.appendChild(el('small', null, 'Resposta correta'));
+      t.appendChild(document.createTextNode(s.question.options[r.correct]));
+      ans.appendChild(t);
+      res.appendChild(ans);
+    } else {
+      res.appendChild(el('span', 'badge plain', myVote === null ? 'Você não votou' : 'Obrigado por votar!'));
+      if (r.winners && r.winners.length) {
+        var w = el('div', 'answer opt-color-' + (r.winners[0] % 8));
+        w.appendChild(el('span', 'sphere', letter(r.winners[0])));
+        var tt = el('div');
+        tt.appendChild(el('small', null, r.winners.length > 1 ? 'Empate' : 'Mais votada'));
+        tt.appendChild(document.createTextNode(r.winners.map(function (i) { return s.question.options[i]; }).join(' / ')));
+        w.appendChild(tt);
+        res.appendChild(w);
+      }
+    }
+    box.appendChild(res);
+  }
+
+  function render(s) {
+    var key = [s.phase, s.index, s.endsAt].join('|');
+    if (s.phase === 'voting') {
+      if (shownKey !== key) { shownKey = key; renderVoting(s); }
+      else paintChoice();
+      return;
+    }
+    shownKey = key;
+    cancelAnimationFrame(raf);
+    switch (s.phase) {
+      case 'lobby':
+        center('Você está dentro!', 'A votação começa em instantes. Deixe esta tela aberta.', { hero: true });
+        break;
+      case 'ready':
+        center('Pergunta ' + (s.index + 1) + '/' + s.total, 'Olhe para o telão. A votação abre aqui em instantes.', { pulse: s.index + 1 });
+        break;
+      case 'closed':
+        renderClosed(s);
+        break;
+      case 'finished':
+        center('Fim da votação', 'Obrigado por participar!', { hero: true });
+        break;
+    }
+  }
+
+  Live.connect('vote', {
+    voterId: voterId,
+    onStatus: function (ok) {
+      statusEl.classList.toggle('offline', !ok);
+      statusText.textContent = ok ? 'conectado' : 'reconectando…';
+    },
+    onState: function (s) {
+      var changedQ = !cur || cur.index !== s.index;
+      cur = s;
+      if (changedQ) { myVote = s.myVote; pending = false; }
+      else if (s.myVote !== null && s.myVote !== undefined) myVote = s.myVote;
+      else if (s.phase === 'ready') myVote = null; // pergunta refeita
+      render(s);
+    },
+  });
+})();
+</script>
+</body>
+</html>

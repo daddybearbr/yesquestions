@@ -1,0 +1,123 @@
+/* =====================================================================
+   IDENTIDADE VISUAL — "As Sete Esferas" / YES MDV
+   Todas as telas usam apenas as variáveis abaixo: para ajustar cores,
+   fontes ou arredondamento, mexa só aqui.
+   ===================================================================== */
+
+/* ---- Fontes da marca -------------------------------------------------
+   Coloque os arquivos em public/fonts/ e descomente o bloco abaixo.
+   (Sem eles, o sistema usa as fontes alternativas listadas em --display / --mono.)
+
+@font-face { font-family: "Marca Display"; src: url("/fonts/display.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Marca Mono"; src: url("/fonts/mono.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Marca Mono"; src: url("/fonts/mono-bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "Marca Mono"; src: url("/fonts/mono-italic.woff2") format("woff2"); font-style: italic; font-weight: 700; font-display: swap; }
+   ------------------------------------------------------------------ */
+
+:root {
+  /* paleta da marca */
+  --bg: #19191b;
+  --bg-2: #232326;
+  --cream: #e4f1cb;
+  --teal: #00676d;
+  --red: #ff4112;
+  --yellow: #efe661;
+  --orange: #fd761b;
+  --orange-2: #ff991f;
+
+  /* papéis usados pelas telas */
+  --fg: var(--cream);
+  --muted: rgba(228, 241, 203, 0.62);
+  --card: #26262a;
+  --card-2: #34343a;
+  --accent: var(--teal);
+  --accent-2: var(--orange);
+  --ok: var(--yellow);
+  --warn: var(--orange);
+  --danger: var(--red);
+  --radius: 18px;
+
+  /* tipografia */
+  --display: "Marca Display", "Anton", "Bebas Neue", "League Gothic", "Oswald", "Haettenschweiler", "Impact", "Arial Narrow", sans-serif;
+  --mono: "Marca Mono", "Roboto Mono", "JetBrains Mono", "SF Mono", "Cascadia Mono", ui-monospace, "Menlo", "Consolas", "Courier New", monospace;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; /* usada só no /admin */
+
+  /* esferas (A, B, C, D...) — mesmas cores dos círculos do slide */
+  --o0: radial-gradient(circle at 30% 25%, #1b8f86 0%, #00676d 62%, #034f56 100%);
+  --o1: linear-gradient(135deg, #d9783a 0%, #7a7a55 45%, #086e70 100%);
+  --o2: radial-gradient(circle at 30% 25%, #ff8a2a 0%, #fd761b 60%, #e0600d 100%);
+  --o3: linear-gradient(160deg, #ffb02e 0%, #ff991f 45%, #fd761b 100%);
+  --o4: radial-gradient(circle at 30% 25%, #ff6a3d 0%, #ff4112 62%, #d6300a 100%);
+  --o5: radial-gradient(circle at 30% 25%, #f7f08a 0%, #efe661 62%, #d4c93f 100%);
+  --o6: linear-gradient(135deg, #0a8d94 0%, #00676d 100%);
+  --o7: radial-gradient(circle at 30% 25%, #f1f9de 0%, #e4f1cb 62%, #c7d6ae 100%);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--mono);
+  -webkit-text-size-adjust: 100%;
+  font-synthesis: none;
+}
+
+/* textura de granulado sobre tudo */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  background: url("/img/grain.png");
+  opacity: 0.55;
+  mix-blend-mode: screen;
+}
+
+button { font-family: inherit; }
+
+/* faixa de 4 cores no rodapé */
+.stripe {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  height: 8px;
+  z-index: 40;
+  pointer-events: none;
+  background: linear-gradient(90deg,
+    transparent 0 20%,
+    var(--teal) 20% 40%,
+    var(--red) 40% 60%,
+    var(--yellow) 60% 80%,
+    var(--cream) 80% 100%);
+}
+
+/* esfera de cada opção */
+.opt-color-0 { --oc: #00676d; --og: var(--o0); }
+.opt-color-1 { --oc: #4d7b66; --og: var(--o1); }
+.opt-color-2 { --oc: #fd761b; --og: var(--o2); }
+.opt-color-3 { --oc: #ff991f; --og: var(--o3); }
+.opt-color-4 { --oc: #ff4112; --og: var(--o4); }
+.opt-color-5 { --oc: #efe661; --og: var(--o5); }
+.opt-color-6 { --oc: #0a8d94; --og: var(--o6); }
+.opt-color-7 { --oc: #e4f1cb; --og: var(--o7); }
+
+.sphere {
+  background-image: url("/img/grain.png"), var(--og);
+  background-size: 160px, cover;
+  color: var(--cream);
+  font-family: var(--display);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  text-transform: uppercase;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.18);
+}
+
+/* texto de marca: caixa alta, espaçado, linha de baixo em itálico forte */
+.brand-mono { font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.28em; font-weight: 500; line-height: 1.25; }
+.brand-mono em { font-style: italic; font-weight: 800; }
+
+.hidden { display: none !important; }

@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#19191b">
+<meta name="robots" content="noindex">
+<title>Controle — Votação ao vivo</title>
+<link rel="stylesheet" href="/theme.css">
+<style>
+  body { font-family: var(--font); min-height: 100dvh; padding: calc(16px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom)); }
+  .wrap { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+  h1 { font-size: 18px; margin: 0; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .chip { font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 5px 10px; border-radius: 99px; background: var(--card-2); color: var(--muted); }
+  .chip.voting { background: var(--yellow); color: var(--bg); }
+  .chip.offline { background: var(--orange); color: var(--bg); }
+  .card { background: var(--card); border-radius: var(--radius); padding: 16px; }
+  .qn { color: var(--muted); font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; }
+  .qt { font-size: 20px; font-weight: 800; line-height: 1.25; margin: 4px 0 0; }
+  .stats { display: flex; gap: 10px; }
+  .stat { flex: 1; background: var(--bg-2); border-radius: 14px; padding: 12px; text-align: center; }
+  .stat b { display: block; font-size: 30px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .stat span { color: var(--muted); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .mini { display: flex; flex-direction: column; gap: 8px; }
+  .mini .r { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; font-weight: 700; font-size: 15px; }
+  .mini .r i { width: 26px; height: 26px; border-radius: 50%; background: var(--oc); color: var(--bg); font-style: normal; display: grid; place-items: center; font-weight: 900; font-size: 13px; }
+  .mini .bar { position: relative; height: 26px; background: var(--bg-2); border-radius: 8px; overflow: hidden; }
+  .mini .bar u { position: absolute; inset: 0 auto 0 0; background: var(--oc); opacity: .85; width: 0; transition: width .3s; }
+  .mini .bar span { position: absolute; inset: 0; display: flex; align-items: center; padding: 0 8px; text-shadow: 0 1px 4px rgba(0,0,0,.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
+  .mini .n { font-variant-numeric: tabular-nums; min-width: 28px; text-align: right; }
+  .btn { width: 100%; border: 0; border-radius: 18px; padding: 20px 16px; font-size: 20px; font-weight: 900; color: var(--fg); background: var(--accent); cursor: pointer; touch-action: manipulation; }
+  .btn.go { background: var(--yellow); color: var(--bg); }
+  .btn.stop { background: var(--red); color: var(--bg); }
+  .btn:disabled { opacity: .5; }
+  .row2 { display: flex; gap: 10px; flex-wrap: wrap; }
+  .sec { flex: 1; min-width: 120px; border: 1px solid var(--card-2); background: transparent; color: var(--fg); border-radius: 14px; padding: 13px 12px; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .sec.danger { color: var(--danger); }
+  .err { color: var(--danger); font-weight: 700; min-height: 20px; text-align: center; }
+  .links { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--muted); }
+  .links a { color: var(--accent-2); word-break: break-all; }
+  form.key { display: flex; flex-direction: column; gap: 10px; }
+  form.key input { font-size: 18px; padding: 14px; border-radius: 14px; border: 2px solid var(--card-2); background: var(--bg-2); color: var(--fg); }
+</style>
+</head>
+<body>
+<div class="stripe"></div>
+<div class="wrap" id="app"></div>
+
+<script src="/common.js"></script>
+<script>
+(function () {
+  'use strict';
+  var app = document.getElementById('app');
+  var params = new URLSearchParams(location.search);
+  var key = params.get('key') || '';
+  try { if (!key) key = sessionStorage.getItem('votacao:key') || ''; } catch (e) {}
+
+  var cur = null, counts = [], total = 0, connected = 0, online = true, busy = false;
+  var raf = 0, built = '';
+  var refs = {};
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function letter(i) { return String.fromCharCode(65 + i); }
+  function sum(a) { return a.reduce(function (x, y) { return x + y; }, 0); }
+
+  function keyForm(msg) {
+    app.innerHTML = '';
+    var c = el('div', 'card');
+    c.appendChild(el('h1', null, 'Controle da votação'));
+    var f = el('form', 'key');
+    var input = el('input'); input.type = 'password'; input.placeholder = 'Chave de admin'; input.autocomplete = 'off';
+    var b = el('button', 'btn', 'Entrar'); b.type = 'submit';
+    f.appendChild(input); f.appendChild(b);
+    var e = el('div', 'err', msg || '');
+    f.onsubmit = function (ev) {
+      ev.preventDefault();
+      Live.post('check', input.value.trim()).then(function (r) {
+        if (r.ok) { key = input.value.trim(); try { sessionStorage.setItem('votacao:key', key); } catch (x) {} start(); }
+        else e.textContent = 'Chave incorreta.';
+      });
+    };
+    c.appendChild(f); c.appendChild(e);
+    app.appendChild(c);
+  }
+
+  function run(action, confirmMsg) {
+    if (busy) return;
+    if (confirmMsg && !window.confirm(confirmMsg)) return;
+    busy = true; refs.err.textContent = '';
+    Live.post(action, key).then(function (r) {
+      busy = false;
+      if (!r.ok) refs.err.textContent = r.error || 'Erro.';
+    });
+  }
+
+  function build() {
+    app.innerHTML = '';
+    var h = el('h1');
+    h.appendChild(el('span', null, cur.title));
+    refs.chip = el('span', 'chip');
+    h.appendChild(refs.chip);
+    app.appendChild(h);
+
+    var info = el('div', 'card');
+    refs.qn = el('div', 'qn'); refs.qt = el('div', 'qt');
+    info.appendChild(refs.qn); info.appendChild(refs.qt);
+    app.appendChild(info);
+
+    var stats = el('div', 'stats');
+    function stat(label) { var s = el('div', 'stat'); var b = el('b', null, '0'); s.appendChild(b); s.appendChild(el('span', null, label)); stats.appendChild(s); return b; }
+    refs.time = stat('segundos');
+    refs.votes = stat('votos');
+    refs.conn = stat('conectados');
+    app.appendChild(stats);
+
+    refs.mini = el('div', 'card mini');
+    app.appendChild(refs.mini);
+
+    refs.primary = el('button', 'btn');
+    app.appendChild(refs.primary);
+    refs.sec = el('div', 'row2');
+    app.appendChild(refs.sec);
+    refs.err = el('div', 'err');
+    app.appendChild(refs.err);
+
+    var links = el('div', 'card links');
+    var base = location.origin;
+    [['Participantes', base + '/'], ['Telão (com controles)', base + '/screen?key=' + encodeURIComponent(key)]].forEach(function (p) {
+      var d = el('div'); d.appendChild(document.createTextNode(p[0] + ': '));
+      var a = el('a', null, p[1]); a.href = p[1]; a.target = '_blank'; a.rel = 'noopener';
+      d.appendChild(a); links.appendChild(d);
+    });
+    app.appendChild(links);
+    built = 'ok';
+  }
+
+  var chipText = { lobby: 'Aguardando', ready: 'Pergunta na tela', voting: 'Votando', closed: 'Encerrada', finished: 'Finalizado' };
+
+  function buildMini() {
+    refs.mini.innerHTML = '';
+    refs.rows = [];
+    if (!cur.question) { refs.mini.classList.add('hidden'); return; }
+    refs.mini.classList.remove('hidden');
+    cur.question.options.forEach(function (t, i) {
+      var r = el('div', 'r opt-color-' + (i % 8));
+      r.appendChild(el('i', null, letter(i)));
+      var bar = el('div', 'bar'); var u = el('u'); var s = el('span', null, t);
+      bar.appendChild(u); bar.appendChild(s);
+      var n = el('div', 'n', '0');
+      r.appendChild(bar); r.appendChild(n);
+      refs.mini.appendChild(r);
+      refs.rows.push({ u: u, n: n });
+    });
+    refs.miniKey = cur.index;
+  }
+
+  function paintCounts() {
+    if (!refs.rows) return;
+    var t = sum(counts);
+    total = t;
+    refs.rows.forEach(function (r, i) {
+      var c = counts[i] || 0;
+      r.n.textContent = c;
+      r.u.style.width = (t ? (c / t) * 100 : 0) + '%';
+    });
+    refs.votes.textContent = t;
+    refs.conn.textContent = connected;
+  }
+
+  function paint() {
+    if (!cur) return;
+    if (built !== 'ok') build();
+    refs.chip.textContent = online ? chipText[cur.phase] : 'Reconectando…';
+    refs.chip.className = 'chip ' + (online ? cur.phase : 'offline');
+    refs.qn.textContent = cur.question ? 'Pergunta ' + (cur.index + 1) + ' de ' + cur.total : (cur.phase === 'finished' ? 'Votação finalizada' : cur.total + ' perguntas prontas');
+    refs.qt.textContent = cur.question ? cur.question.text : (cur.phase === 'finished' ? 'Todas as perguntas foram votadas.' : 'Deixe o QR Code no telão até todos entrarem.');
+    if (refs.miniKey !== cur.index || !refs.rows || (cur.question && refs.rows.length !== cur.question.options.length)) buildMini();
+
+    var p = Live.primaryAction(cur);
+    refs.primary.className = 'btn ' + (p ? p.kind : '');
+    refs.primary.textContent = p ? p.label : 'Votação finalizada';
+    refs.primary.disabled = !p;
+    refs.primary.onclick = p ? function () { run(p.action); } : null;
+
+    refs.sec.innerHTML = '';
+    Live.secondaryActions(cur, total).forEach(function (a) {
+      var b = el('button', 'sec' + (a.danger ? ' danger' : ''), a.label);
+      b.onclick = function () { run(a.action, a.confirm); };
+      refs.sec.appendChild(b);
+    });
+    refs.conn.textContent = connected;
+    cancelAnimationFrame(raf);
+    tick();
+  }
+
+  function tick() {
+    if (!cur) return;
+    if (cur.phase === 'voting') {
+      var left = cur.endsAt - Live.serverNow();
+      refs.time.textContent = Live.fmtSeconds(left);
+      if (left > 0) raf = requestAnimationFrame(tick);
+    } else {
+      refs.time.textContent = cur.phase === 'ready' ? cur.voteSeconds : '—';
+    }
+  }
+
+  function start() {
+    Live.keepAlive();
+    cur = null; built = '';
+    app.innerHTML = '';
+    app.appendChild(el('div', 'card', 'Conectando…'));
+    Live.connect('admin', {
+      onStatus: function (ok) { online = ok; if (cur) paint(); },
+      onState: function (s) {
+        cur = s;
+        if (s.result && s.phase === 'closed') counts = s.result.counts;
+        if (s.phase === 'ready' || s.phase === 'lobby') counts = s.question ? s.question.options.map(function () { return 0; }) : [];
+        connected = s.connected || connected;
+        paint(); paintCounts();
+      },
+      onCounts: function (c) {
+        if (cur && c.index === cur.index && cur.phase !== 'closed') counts = c.counts;
+        connected = c.connected;
+        paintCounts();
+      },
+    });
+  }
+
+  if (!key) keyForm();
+  else Live.post('check', key).then(function (r) {
+    if (r.ok) { try { sessionStorage.setItem('votacao:key', key); } catch (e) {} start(); }
+    else keyForm('Chave incorreta.');
+  });
+})();
+</script>
+</body>
+</html>

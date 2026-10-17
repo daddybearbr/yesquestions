@@ -1,0 +1,10 @@
+# Blueprint do Render: plano gratuito, sem dependências para instalar.
+# Depois de criar o serviço, adicione a variável ADMIN_KEY em Environment (veja o README).
+services:
+  - type: web
+    name: votacao-ao-vivo
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    healthCheckPath: /healthz

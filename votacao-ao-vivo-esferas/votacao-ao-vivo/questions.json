@@ -1,0 +1,61 @@
+{
+  "title": "As Sete Esferas",
+  "voteSeconds": 40,
+  "questions": [
+    {
+      "title": "O governo pertence ao maligno?",
+      "text": "Se Satanás é chamado de “príncipe deste mundo”, podemos considerar que as estruturas políticas e os governos humanos estão, em essência, sob seu domínio?",
+      "options": [
+        "Sim. A autoridade política é consequência da queda e, portanto, pertence ao domínio de Satanás.",
+        "Não. Toda autoridade vem de Deus, portanto os governos representam necessariamente a vontade divina.",
+        "Não. Deus instituiu a autoridade civil, embora governos possam agir sob influência do pecado e contrariar seus propósitos.",
+        "Sim. Embora Deus permita a existência dos governos, o exercício do poder político pertence essencialmente ao sistema maligno."
+      ],
+      "correct": 2
+    },
+    {
+      "title": "O governo deveria impor a religião?",
+      "text": "Se os valores de Deus são verdadeiros e bons para todos, o governo deveria usar sua autoridade para conduzir a sociedade a esses valores, inclusive em matéria de fé?",
+      "options": [
+        "Sim. Se a verdade divina é universal, o Estado deve garantir que todos sigam a fé verdadeira.",
+        "Não. O Estado pode proteger a liberdade religiosa e o bem comum, sem obrigar ninguém a professar uma fé.",
+        "Sim. O Estado não deve obrigar ninguém a se converter, mas deve privilegiar oficialmente o cristianismo para conduzir a sociedade à verdade.",
+        "Não. O Estado deve impedir qualquer expressão religiosa na elaboração de suas leis."
+      ],
+      "correct": 1
+    },
+    {
+      "title": "O Estado deveria excluir a religião?",
+      "text": "Para que o Estado trate igualmente cristãos, ateus e pessoas de outras religiões, decisões políticas deveriam ser tomadas sem qualquer influência de convicções religiosas?",
+      "options": [
+        "Sim. Os cristãos podem ter convicções pessoais, mas devem usar apenas argumentos sem qualquer origem religiosa no espaço político.",
+        "Sim. A neutralidade exige que os cristãos deixem suas convicções religiosas fora de qualquer debate político.",
+        "Não. Como a fé cristã é verdadeira, somente argumentos cristãos deveriam orientar as decisões públicas.",
+        "Não. O Estado deve garantir liberdade religiosa, e os cidadãos podem participar do debate público a partir de suas convicções."
+      ],
+      "correct": 3
+    },
+    {
+      "title": "Evangelismo ou política?",
+      "text": "Se a missão dada por Jesus à Igreja é fazer discípulos de todas as nações, envolver-se em questões políticas desvia a Igreja de sua verdadeira missão?",
+      "options": [
+        "Não. O evangelismo e o discipulado permanecem centrais, mas a fé cristã também orienta a responsabilidade dos discípulos na sociedade.",
+        "Sim. A Igreja deve concentrar-se exclusivamente na pregação, deixando as questões de justiça e política para os cristãos individualmente.",
+        "Sim. Qualquer envolvimento com questões políticas compromete a fidelidade da Igreja à Grande Comissão.",
+        "Não. Evangelismo e participação política possuem exatamente a mesma prioridade na missão institucional da Igreja."
+      ],
+      "correct": 0
+    },
+    {
+      "title": "Política ou evangelismo?",
+      "text": "Se mudanças políticas podem afetar milhões de pessoas, enquanto a evangelização normalmente alcança indivíduos, a Igreja teria maior impacto priorizando a transformação das estruturas políticas?",
+      "options": [
+        "Sim. A evangelização continua importante, mas transformar as estruturas políticas deve ser a prioridade em sociedades injustas.",
+        "Sim. Alterar leis produz resultados coletivos, por isso deve se tornar a principal missão da Igreja.",
+        "Não. A transformação política pode contribuir para o bem comum, mas não substitui a missão de anunciar o Evangelho e formar discípulos.",
+        "Não. A Igreja deve evitar qualquer influência política, pois apenas as mudanças individuais possuem valor espiritual."
+      ],
+      "correct": 2
+    }
+  ]
+}
