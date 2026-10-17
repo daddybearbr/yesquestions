@@ -23,7 +23,8 @@ const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const QUESTIONS_FILE = process.env.QUESTIONS_FILE || path.join(ROOT, 'questions.json');
 const STATE_FILE = process.env.STATE_FILE || path.join(ROOT, 'data', 'state.json');
-const PUBLIC_URL = (process.env.PUBLIC_URL || '').replace(/\/+$/, '');
+// No Render, RENDER_EXTERNAL_URL já traz o endereço público (ex.: https://yesquestions.onrender.com).
+const PUBLIC_URL = (process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL || '').replace(/\/+$/, '');
 const GRACE_MS = 500; // tolerância para votos em trânsito quando o tempo acaba
 
 /* ------------------------------------------------------------------ config */

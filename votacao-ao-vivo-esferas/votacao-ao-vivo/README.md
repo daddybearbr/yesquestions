@@ -89,7 +89,10 @@ em tempo real usado aqui (SSE) e limita 200 requisições simultâneas. A Vercel
 (estado em memória e conexões longas). Railway tem só US$ 1/mês de crédito no plano Free (e um crédito único de US$ 5 no teste);
 Fly.io não tem plano gratuito (uma máquina pequena custa cerca de US$ 2,19/mês, cobrada por segundo).
 
-Se o endereço público for diferente do que o telão abre, defina `PUBLIC_URL=https://seu-endereco`.
+O QR Code do telão aponta sozinho para o endereço público: no Render o servidor usa `RENDER_EXTERNAL_URL`. Para o endereço do evento
+(`https://yesquestions.onrender.com/`) o telão usa o QR oficial `public/img/qr-participantes.svg`; para qualquer outro endereço ele gera o QR na hora.
+Os arquivos `public/img/qr-participantes.png` e `.svg` também servem para imprimir ou colocar em slides.
+Se for usar outro endereço (domínio próprio, por exemplo), defina `PUBLIC_URL=https://seu-endereco`.
 
 ## Configurações (variáveis de ambiente)
 
